@@ -1,0 +1,4 @@
+import http
+
+KAKAO_REST_API_KEY = '1a32cc25cda2d539a52cbe6823886114'
+KAKAO_REDIRECT_URI = 'http://127.0.0.1:8000/oauth'

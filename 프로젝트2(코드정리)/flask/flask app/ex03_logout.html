@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- 문서 기본 설정 -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kakao Login Demo</title>
+
+  <!-- Kakao SDK 로드 -->
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+
+  <!-- JavaScript 코드 -->
+  <script>
+    // DOM이 로드되면 실행되는 함수
+    document.addEventListener('DOMContentLoaded', function() {
+      // Kakao SDK 초기화
+      Kakao.init('885afa28ff7b14a615223427aa3b3779'); // 사용하려는 앱의 JavaScript 키 입력
+      // 로그인 상태 확인
+      checkLoginStatus();
+    });
+
+    // 로그인 상태 확인 함수
+    function checkLoginStatus() {
+      if (Kakao.Auth.getAccessToken()) {
+        // 액세스 토큰이 있는 경우
+        document.querySelector('#login-btn').style.display = 'none'; // 로그인 버튼 숨기기
+        document.querySelector('#logout-btn').style.display = 'block'; // 로그아웃 버튼 보이기
+        requestUserInfo(); // 사용자 정보 요청
+      } else {
+        // 액세스 토큰이 없는 경우
+        document.querySelector('#login-btn').style.display = 'block'; // 로그인 버튼 보이기
+        document.querySelector('#logout-btn').style.display = 'none'; // 로그아웃 버튼 숨기기
+      }
+    }
+
+    // 카카오 로그인 함수
+    function loginWithKakao() {
+      Kakao.Auth.authorize({
+        redirectUri: 'http://127.0.0.1:8000/oauth', // 리다이렉트 URI
+        state: 'userme' // 상태 정보
+      });
+    }
+
+    // 카카오 로그아웃 함수
+    function kakaoLogout() {
+      Kakao.Auth.logout()
+        .then(function() {
+          // 로그아웃 성공 시 실행
+          alert('logout ok\naccess token -> ' + Kakao.Auth.getAccessToken()); // 로그아웃 알림
+          deleteCookie(); // 쿠키 삭제
+          checkLoginStatus(); // 로그인 상태 확인
+        })
+        .catch(function(err) {
+          // 로그아웃 실패 시 실행
+          alert('Not logged in: ' + JSON.stringify(err)); // 로그아웃 실패 알림
+        });
+    }
+
+    // 사용자 정보 요청 함수
+    function requestUserInfo() {
+      Kakao.API.request({
+        url: '/v2/user/me', // 사용자 정보 요청 URL
+      })
+      .then(function(res) {
+        // 요청 성공 시 실행
+        document.querySelector('#user-info').innerText = 'User Info: ' + JSON.stringify(res); // 사용자 정보 표시
+      })
+      .catch(function(err) {
+        // 요청 실패 시 실행
+        alert('Failed to request user information: ' + JSON.stringify(err)); // 요청 실패 알림
+      });
+    }
+
+    // 쿠키 삭제 함수
+    function deleteCookie() {
+      // authorize-access-token 쿠키 삭제
+      document.cookie = 'authorize-access-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+  </script>
+</head>
+
+<body>
+  <!-- 카카오 로그인 버튼 -->
+  <a id="login-btn" href="javascript:loginWithKakao()" style="display: none;">
+    <img src="https://k.kakaocdn.net/14/dn/btroDszwNrM/I6efHub1SN5KCJqLm1Ovx1/o.jpg" width="222" alt="카카오 로그인 버튼" />
+  </a>
+
+  <!-- 로그아웃 버튼 -->
+  <button id="logout-btn" class="api-btn" onclick="kakaoLogout()" style="display: none;">로그아웃</button>
+
+  <!-- 사용자 정보 출력 -->
+  <p id="token-result"></p>
+  <p id="user-info"></p>
+</body>
+
+</html>

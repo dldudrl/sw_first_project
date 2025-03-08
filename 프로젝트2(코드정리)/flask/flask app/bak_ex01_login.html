@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오 로그인 구현</title>
+</head>
+
+<body>
+    <h2>로그인</h2>
+    <!-- 로그인 폼 -->
+    <form id="login-form">
+        <label for="username">아이디:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">비밀번호:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <button type="submit">로그인</button>
+    </form>
+    <br>
+    <!-- 회원가입 버튼 -->
+    <button id="signup-btn">회원가입</button>
+    <br><br>
+    <!-- 카카오 로그인 버튼 -->
+    <a id="kakao-login-btn" href="javascript:loginWithKakao()">
+        <img src="https://k.kakaocdn.net/14/dn/btroDszwNrM/I6efHub1SN5KCJqLm1Ovx1/o.jpg" width="222" alt="카카오 로그인 버튼" />
+    </a>
+    <p id="token-result"></p>
+
+    <script>
+        // 카카오 앱의 REST API 키와 리다이렉트 URI 설정
+        const REST_API_KEY = '1a32cc25cda2d539a52cbe6823886114'; // 카카오 앱의 REST API 키
+        const REDIRECT_URI = 'http://127.0.0.1:8000/oauth'; // 실제 서비스의 리다이렉트 URI
+
+        // 카카오 로그인 함수
+        function loginWithKakao() {
+            // 카카오 인증 URL 생성
+            const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}`;
+            window.location.href = authUrl; // 카카오 인증 페이지로 리디렉션
+        }
+
+        // 페이지 로드 시 인가 코드 처리
+        window.onload = function () {
+            // URL에서 인가 코드 및 오류 정보 추출
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+
+            if (code) {
+                // 인가 코드가 있으면 이를 표시하고 토큰을 요청
+                document.getElementById('token-result').innerText = '인가 코드: ' + code;
+                fetchToken(code); // 인가 코드로 토큰 요청
+            } else if (error) {
+                // 오류가 있으면 이를 표시
+                document.getElementById('token-result').innerText = 'Error: ' + errorDescription;
+            }
+        }
+
+        // 토큰 요청 함수
+        function fetchToken(code) {
+            const tokenUrl = 'https://kauth.kakao.com/oauth/token'; // 토큰 요청 URL
+            const data = {
+                grant_type: 'authorization_code', // 권한 부여 유형
+                client_id: REST_API_KEY, // 클라이언트 ID
+                redirect_uri: REDIRECT_URI, // 리다이렉트 URI
+                code: code, // 인가 코드
+                client_secret: 'BUfkMPXiACjfIfQ7FOyxt9TzeUxLKbu7' // 클라이언트 비밀
+            };
+
+            // 토큰 요청
+            fetch(tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' // 헤더 설정
+                },
+                body: new URLSearchParams(data) // 요청 본문 설정
+            })
+                .then(response => response.json()) // 응답을 JSON으로 변환
+                .then(data => {
+                    if (data.access_token) {
+                        // 액세스 토큰이 있으면 이를 표시
+                        document.getElementById('token-result').innerText = 'Access Token: ' + data.access_token;
+                        // 여기에 토큰을 사용하여 추가 작업을 수행할 수 있습니다.
+                    } else {
+                        // 토큰 발급 실패 시 메시지 표시
+                        document.getElementById('token-result').innerText = '토큰 발급 실패';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error); // 오류 처리
+                });
+        }
+
+        // 로그인 폼 제출 이벤트 처리
+        document.getElementById('login-form').addEventListener('submit', function (event) {
+            event.preventDefault(); // 기본 제출 동작 방지
+            const formData = new FormData(event.target); // 폼 데이터 추출
+            const data = Object.fromEntries(formData.entries()); // 폼 데이터를 객체로 변환
+
+            // 서버로 로그인 요청
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // 헤더 설정
+                },
+                body: JSON.stringify(data) // 요청 본문 설정
+            })
+                .then(response => response.json()) // 응답을 JSON으로 변환
+                .then(result => {
+                    if (result.success) {
+                        // 로그인 성공 시 리다이렉트
+                        window.location.href = 'http://127.0.0.1:8000/success';
+                    } else {
+                        // 로그인 실패 시 메시지 표시
+                        alert('로그인 실패: ' + result.message);
+                        // 카카오 인증 URL로 이동
+                        const authUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}`;
+                        window.location.href = authUrl;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error); // 오류 처리
+                });
+        });
+
+        // 회원가입 버튼 클릭 이벤트 처리
+        document.getElementById('signup-btn').addEventListener('click', function () {
+            // 등록 버튼 클릭 시 app.py로 이동
+            window.location.href = '/app.py';
+        });
+
+    </script>
+</body>
+
+</html>

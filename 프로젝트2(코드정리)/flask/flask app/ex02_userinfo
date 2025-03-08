@@ -1,0 +1,70 @@
+<!-- Kakao JavaScript SDK를 가져옵니다. -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+  integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+
+<script>
+  // Kakao SDK를 초기화합니다. 사용하려는 앱의 JavaScript 키를 입력합니다.
+  Kakao.init('885afa28ff7b14a615223427aa3b3779');
+
+  // Kakao 로그인 함수
+  function loginWithKakao() {
+    // Kakao.Auth.authorize 메서드를 사용하여 Kakao 로그인을 실행합니다.
+    // redirectUri는 로그인 후 리다이렉트될 URI를 나타냅니다.
+    // state는 추가 상태 정보를 전달할 수 있습니다.
+    Kakao.Auth.authorize({
+      redirectUri: 'http://127.0.0.1:8000/oauth',
+      state: 'userme',
+    });
+  }
+
+  // 사용자 정보 요청 함수
+  function requestUserInfo() {
+    // Kakao.API.request 메서드를 사용하여 사용자 정보를 요청합니다.
+    // url은 요청할 API의 엔드포인트를 나타냅니다.
+    Kakao.API.request({
+      url: '/v2/user/me',
+    })
+      .then(function(res) {
+        // 요청이 성공하면 사용자 정보를 알림으로 출력합니다.
+        alert(JSON.stringify(res));
+      })
+      .catch(function(err) {
+        // 요청이 실패하면 에러 메시지를 알림으로 출력합니다.
+        alert(
+          'failed to request user information: ' + JSON.stringify(err)
+        );
+      });
+  }
+
+  // 로그인 성공 후 토큰을 사용하여 API 요청을 준비하는 함수
+  function displayToken() {
+    // 토큰을 쿠키에서 가져옵니다.
+    var token = getCookie('authorize-access-token');
+
+    if(token) {
+      // 가져온 토큰을 Kakao SDK에 설정합니다.
+      Kakao.Auth.setAccessToken(token);
+      // 화면에 로그인 성공 메시지를 표시하고 API 요청 버튼을 표시합니다.
+      document.querySelector('#token-result').innerText = 'login success, ready to request API';
+      document.querySelector('button.api-btn').style.visibility = 'visible';
+    }
+  }
+
+  // 쿠키에서 특정 이름의 쿠키값을 가져오는 함수
+  function getCookie(name) {
+    var parts = document.cookie.split(name + '=');
+    if (parts.length === 2) { return parts[1].split(';')[0]; }
+  }
+</script>
+
+<!-- 카카오 로그인 버튼 -->
+<a id="kakao-login-btn" href="javascript:loginWithKakao()">
+  <img src="https://k.kakaocdn.net/14/dn/btroDszwNrM/I6efHub1SN5KCJqLm1Ovx1/o.jpg" width="222"
+    alt="카카오 로그인 버튼" />
+</a>
+
+<!-- 토큰 결과를 표시할 영역 -->
+<p id="token-result"></p>
+
+<!-- 사용자 정보 요청 버튼 -->
+<button class="api-btn" onclick="requestUserInfo()" style="visibility:hidden">사용자 정보 가져오기</button>

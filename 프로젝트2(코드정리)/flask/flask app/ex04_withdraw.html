@@ -1,0 +1,35 @@
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+  integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+
+<script>
+  // Kakao SDK 초기화
+  Kakao.init('885afa28ff7b14a615223427aa3b3779'); // 사용하려는 앱의 JavaScript 키 입력
+</script>
+
+<!-- 앱 탈퇴 버튼 -->
+<button class="api-btn" onclick="unlinkApp()">앱 탈퇴하기</button>
+
+<script>
+  // 앱 탈퇴 함수
+  function unlinkApp() {
+    // Kakao API를 사용하여 사용자 앱 탈퇴 요청
+    Kakao.API.request({
+      url: '/v1/user/unlink', // 사용자 앱 탈퇴 요청 URL
+    })
+      .then(function(res) {
+        // 요청 성공 시 실행
+        alert('success: ' + JSON.stringify(res)); // 성공 알림
+        deleteCookie(); // 쿠키 삭제 함수 호출
+      })
+      .catch(function(err) {
+        // 요청 실패 시 실행
+        alert('fail: ' + JSON.stringify(err)); // 실패 알림
+      });
+  }
+
+  // 쿠키 삭제 함수
+  function deleteCookie() {
+    // authorize-access-token 쿠키 삭제
+    document.cookie = 'authorize-access-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+  }
+</script>
